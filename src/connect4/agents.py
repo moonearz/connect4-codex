@@ -159,6 +159,14 @@ def make_agent(name, seed=0):
         "alphabeta": lambda: AlphaBetaAgent(5),
         "mcts": lambda: MCTSAgent(300, seed),
     }
+    if name in ("learned", "untrained"):
+        from connect4.learning import LearningAgent
+
+        return (
+            LearningAgent.load(seed=seed)
+            if name == "learned"
+            else LearningAgent(seed=seed)
+        )
     if name not in factories:
         raise ValueError(f"Unknown agent: {name}")
     return factories[name]()

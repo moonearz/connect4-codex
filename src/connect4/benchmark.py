@@ -1,6 +1,7 @@
 """Run reproducible paired evaluations: python -m connect4.benchmark."""
 
 import argparse
+import hashlib
 import json
 import platform
 import subprocess
@@ -72,6 +73,19 @@ def main():
     except (subprocess.CalledProcessError, FileNotFoundError):
         revision = "unknown"
     result = benchmark(*args.agents, args.games, args.seed)
+    result["configuration"] = {
+        "minimax_depth": 3,
+        "alphabeta_depth": 5,
+        "mcts_iterations": 300,
+    }
+    source = Path(__file__).parent
+    result["source_sha256"] = {
+        p.name: hashlib.sha256(p.read_bytes()).hexdigest()
+        for p in sorted(source.glob("*.py"))
+    }
+    model = source / "data" / "learner.json"
+    if "learned" in args.agents:
+        result["model_sha256"] = hashlib.sha256(model.read_bytes()).hexdigest()
     result["environment"] = dict(
         python=platform.python_version(),
         platform=platform.platform(),

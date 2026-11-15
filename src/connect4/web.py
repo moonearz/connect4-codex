@@ -42,7 +42,7 @@ def create_app():
                 "medium": "minimax",
                 "hard": "alphabeta",
                 "mcts": "mcts",
-                "learned": "random",
+                "learned": "learned",
             }
             move = make_agent(names[difficulty]).choose(game)
             game = game.play(move)

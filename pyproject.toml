@@ -34,4 +34,4 @@ quote-style = "double"
 indent-style = "space"
 
 [tool.setuptools.package-data]
-connect4 = ["templates/*.html", "static/*"]
+connect4 = ["templates/*.html", "static/*", "data/*.json"]
