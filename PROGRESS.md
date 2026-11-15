@@ -91,3 +91,13 @@
 - Continuation W/D/L (20 per agent): random 3/0/17; minimax 9/0/11; alpha-beta 9/1/10; MCTS 10/0/10; learner 9/1/10. Every agent had ten theoretically winnable starts and ten losing starts; MCTS converted all ten wins in this sample.
 - This random late-game corpus is largely tactical and contains no drawn starts. Its high accuracy does not establish perfect play or opening strength.
 - Added an optional quiet-position filter (no immediate win and at least two moves safe against an immediate loss), using engine checks without solver scores. A second bounded evaluation will use 36 earlier positions at 14–19 plies, seed 92000, with a three-second exact-query timeout and 12 paired continuations per agent. Timeouts and incomplete games will remain explicit.
+
+### Earlier quiet-position results and final validation
+- All 36 quiet positions at 14–19 plies solved and all 60 paired continuations completed without timeouts. Solver subprocess time was 14.51 seconds across 322 queries; the initial suite used 9.60 seconds across 223 queries.
+- On the 23 informative quiet positions, outcome-preserving decisions: random 8/23 (34.8%), minimax 17/23 (73.9%), alpha-beta 18/23 (78.3%), MCTS 20/23 (87.0%), learner 18/23 (78.3%). Overall preservation on all 36: 58.3%, 83.3%, 86.1%, 91.7%, 86.1%.
+- Quiet continuation W/D/L (12 per agent): random 0/0/12; minimax 2/1/9; alpha-beta 4/0/8; MCTS 5/0/7; learner 5/0/7. Each agent had five winning, two drawn and five losing starts under perfect play. MCTS and learner converted the five wins but both dropped the draws.
+- These are small midgame/endgame samples with different computational budgets, not Elo ratings, perfect agents or a full empty-board strength measurement. Earlier drawn positions expose failure modes hidden by the first late-game sample.
+- Replayed all 160 completed game traces and verified every recorded reference move maximized its exact scores and every actual outcome matched the terminal engine state.
+- Final local validation: 98 tests pass on Python 3.13.18, including ten actual solver endgames checked against exhaustive Python minimax; Ruff lint/format and diff checks pass. Normal CI skips only the optional real-solver check because external binaries are not distributed.
+- Evaluation results include held-out position labels, full decision/game traces, coverage, stage breakdowns, solver build hashes and unchanged agent/model configuration. Do not use these labels for training. If tuning to these errors, reserve a new held-out seed set.
+- No gameplay, learning, model, dependency or Makefile change was made in this follow-up. The external source/binary/license stay in ignored `.solver/`; no opening book, deployment, GPU or paid service was used.

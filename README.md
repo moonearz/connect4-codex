@@ -117,6 +117,32 @@ historical snapshots of the original agents. New general-suite runs write into
 matchups repeat the same two games; use paired random openings for position
 diversity.
 
+## Compare with an exact solver
+
+An optional evaluation tool runs [Pascal Pons's solver](https://github.com/PascalPons/connect4)
+locally. It measures exact move quality and plays paired continuations against
+perfect opposition, using the existing agents unchanged.
+
+```bash
+# Requires a C++ compiler. Downloads pinned AGPL source into ignored .solver/.
+python scripts/setup_solver.py
+
+# Random surviving midgame/endgame positions and paired continuations.
+python -m connect4.solver_benchmark
+
+# Earlier positions with no immediate win and at least two safe choices.
+python -m connect4.solver_benchmark --quiet --positions 36 \
+  --plies 14 15 16 17 18 19 --games 12 --seed 92000 \
+  --output experiments/solver-strategic
+```
+
+See the [evaluation guide](docs/SOLVER.md), [initial solver results](experiments/solver/RESULTS.md)
+and [earlier quiet-position results](experiments/solver-strategic/RESULTS.md).
+The solver and its labels are evaluation-only: neither training nor browser play
+uses them. No opening book is downloaded. Results include timeouts/coverage and
+separate exact-score optimality from preserving the best achievable win/draw/loss.
+Continuation results start at the recorded positions, rather than the empty board.
+
 ## Engine API
 
 ```python
@@ -142,6 +168,7 @@ column, or an invalid column raises `ValueError`.
 - `agents.py`: random, minimax, alpha-beta, and MCTS implementations.
 - `learning.py`: TD self-play, features, JSON model persistence, training CLI.
 - `benchmark.py`: paired evaluation CLI with optional random openings.
+- `solver.py`, `solver_benchmark.py`: optional external exact-reference evaluation.
 - `web.py`, `templates/`, `static/`: Flask API and browser interface.
 - `tests/`: engine oracle, tactical search, API and learning tests.
 - `experiments/`: raw results, training pilot, and comparison report.

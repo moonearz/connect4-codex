@@ -66,6 +66,24 @@ analysis is supported (`--positions 1 --plies 0 --games 2`), but can time out ev
 with a large budget. Default results describe **midgame/endgame strength**, not
 full-game strength from the initial board. No website is queried during evaluation.
 
+### Earlier quiet-position comparison
+
+The additional recorded suite rejects positions with an immediate winning move
+and requires at least two legal moves that do not allow an immediate opponent
+win. This filter uses the engine only, without solver labels or agent decisions.
+
+```bash
+python -m connect4.solver_benchmark --quiet --positions 36 \
+  --plies 14 15 16 17 18 19 --games 12 --seed 92000 \
+  --output experiments/solver-strategic
+```
+
+This has six positions per stage and uses the first six for paired continuations.
+It tests earlier strategic decisions and is intentionally more expensive. The
+three-second query limit remains in effect; interpret results on the resolved
+subset alongside the coverage/timeout counts. Timed-out positions may be harder,
+so the resolved subset is not an unbiased estimate of every earlier position.
+
 ## Metrics
 
 The solver uses one-based columns on stdin; our adapter validates and translates
@@ -118,3 +136,21 @@ All generated solver labels are **evaluation-only holdout data**. Neither the
 learning pipeline nor deployed agents read `experiments/solver`, invoke the
 reference, or use solved-game databases. This evaluation must not become training
 input if its reported performance is to remain a held-out measurement.
+
+## Recorded snapshot and next steps
+
+The initial 90-position suite had 50 informative positions. On the harder
+36-position quiet suite, 23 were informative. Outcome-preserving choices on
+those 23 were: random 8, minimax 17, alpha-beta 18, MCTS 20 and learner 18.
+All 126 initial positions resolved, and all 160 continuations completed, with no
+solver timeouts. These totals cover two small, differently selected corpora.
+
+MCTS and the learner each converted all five winning starts in the quieter
+continuation sample, but both lost the two drawable starts. That identifies draw
+preservation as a useful area to investigate. Neither agent is perfect: MCTS
+still made three outcome-changing errors on the 36 quiet positions. Its stronger
+showing here also comes with a larger time budget than alpha-beta.
+
+Use larger position sets and additional seeds before drawing general strength
+conclusions. If these cases guide future tuning, treat them as development data
+and create a fresh held-out set for the next reported comparison.
