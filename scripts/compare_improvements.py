@@ -21,6 +21,7 @@ BASELINE = "a70bc307e2e4e31ba5862e0be257b921b54e7e1f"
 MATCHES = [
     ("old_mcts", "alphabeta"),
     ("mcts", "alphabeta"),
+    ("mcts_fresh", "alphabeta"),
     ("mcts_300", "alphabeta"),
     ("old_learned", "alphabeta"),
     ("learned", "alphabeta"),
@@ -51,6 +52,9 @@ def main():
     parser.add_argument(
         "--output", type=Path, default=ROOT / "experiments/improvements"
     )
+    parser.add_argument(
+        "--match", nargs=2, action="append", metavar=("AGENT_A", "AGENT_B")
+    )
     args = parser.parse_args()
     old_agents, agents_hash = load_baseline("src/connect4/agents.py", "baseline_agents")
     old_learning, learning_hash = load_baseline(
@@ -59,7 +63,17 @@ def main():
     old_model_bytes = baseline_file("src/connect4/data/learner.json")
     old_model = json.loads(old_model_bytes)
 
+    class FreshMCTS:
+        def __init__(self, seed):
+            self.agent = MCTSAgent(600, seed)
+
+        def choose(self, game):
+            self.agent.root = None
+            return self.agent.choose(game)
+
     def factory(name, seed):
+        if name == "mcts_fresh":
+            return FreshMCTS(seed)
         if name == "old_mcts":
             return old_agents.MCTSAgent(300, seed)
         if name == "mcts_300":
@@ -78,14 +92,16 @@ def main():
     rows = [
         "# Agent improvements",
         "",
-        f"Baseline revision: `{BASELINE}`. Run `python scripts/compare_improvements.py`",
+        f"Baseline revision: `{BASELINE}`.",
+        "Run `python scripts/compare_improvements.py`",
         "to reproduce. Each matchup uses the same held-out seeded four-ply openings",
         "and alternates seats within pairs. Evaluation runs sequentially.",
         "",
-        "| Agent A | Agent B | Games | A wins | B wins | Draws | A ms/move | B ms/move | Data |",
+        "| Agent A | Agent B | Games | A wins | B wins | Draws | "
+        "A ms/move | B ms/move | Data |",
         "|---|---|---:|---:|---:|---:|---:|---:|---|",
     ]
-    for first, second in MATCHES:
+    for first, second in args.match or MATCHES:
         result = add_provenance(
             benchmark(
                 first, second, args.games, args.seed, factory=factory, opening_plies=4
@@ -100,6 +116,7 @@ def main():
         result["controls"] = {
             "old_mcts": "Original UCT, 300 uniform random rollouts",
             "mcts": "Tactical UCT, 600 bounded guided rollouts, subtree reuse",
+            "mcts_fresh": "New 600-iteration MCTS with no tree reuse (web control)",
             "mcts_300": "New MCTS at original 300-iteration budget",
             "old_learned": "Original eight-feature model, one-ply selection",
             "learned": "New 14-feature TD(lambda) model, tactical depth-6 search",
@@ -146,6 +163,7 @@ def main():
         "  seeds starting at 70000, separated from training and development.",
         "- Web requests are stateless and create a fresh agent each move. Subtree",
         "  reuse is available in simulations, but not across browser requests.",
+        "  mcts_fresh resets its tree each turn to test this web behavior.",
         "  Depth and iteration budgets are deterministic; timings vary by hardware.",
         "- The stronger learner includes search; it is not a claim that the small",
         "  value model alone replaces alpha-beta. No neural model or GPU was used.",

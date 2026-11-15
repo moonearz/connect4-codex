@@ -101,3 +101,27 @@ def test_tactical_filter_matches_brute_force():
             expected = wins or safe or set(legal)
             assert set(tactical_moves(game)) == expected
             game = game.play(rng.choice(legal))
+
+
+@pytest.mark.parametrize(
+    "moves,winner", [([0, 1, 0, 1, 0, 1, 0], 0), ([0, 1, 0, 1, 2, 1, 2, 1], 1)]
+)
+def test_mcts_terminal_value_uses_current_player_perspective(moves, winner):
+    game = position(moves)
+    assert game.winner == winner
+    assert MCTSAgent(1)._rollout(game) == -1
+
+
+def test_mcts_reuses_the_actual_opponent_reply_subtree():
+    agent = MCTSAgent(80, seed=13)
+    game = Game()
+    move = agent.choose(game)
+    child = agent.root.children[move]
+    reply = next(iter(child.children))
+    expected_root = child.children[reply]
+    next_game = game.play(move).play(reply)
+    visits = expected_root.visits
+    chosen = agent.choose(next_game)
+    assert chosen in next_game.legal_moves()
+    assert agent.root is expected_root
+    assert agent.root.visits == visits + agent.iterations
