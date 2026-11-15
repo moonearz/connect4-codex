@@ -68,3 +68,36 @@ def test_benchmark_move_trace_replays_and_includes_opening():
         assert winner == record["winner"]
         assert record["moves"] == len(record["played_moves"])
         assert record["moves"] == sum(record["decisions"]) + 4
+
+
+@pytest.mark.parametrize("agent", [MCTSAgent(1), MCTSAgent(30)])
+def test_mcts_blocks_immediate_loss_even_at_small_budget(agent):
+    assert agent.choose(position([6, 0, 6, 1, 5, 2])) == 3
+
+
+def test_tactical_filter_matches_brute_force():
+    import random
+
+    from connect4.tactics import tactical_moves, winning_spots
+
+    rng = random.Random(134)
+    for _ in range(150):
+        game = Game()
+        while not game.terminal:
+            occupied = game.bits[0] | game.bits[1]
+            spots = winning_spots(game.bits[game.turn], occupied)
+            legal = game.legal_moves()
+            wins = {m for m in legal if game.play(m).winner == game.turn}
+            predicted = {m for m in legal if spots & (1 << (m * 7 + game.heights[m]))}
+            assert predicted == wins
+            safe = {
+                m
+                for m in legal
+                if not any(
+                    game.play(m).play(reply).winner == 1 - game.turn
+                    for reply in game.play(m).legal_moves()
+                )
+            }
+            expected = wins or safe or set(legal)
+            assert set(tactical_moves(game)) == expected
+            game = game.play(rng.choice(legal))

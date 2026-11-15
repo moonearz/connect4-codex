@@ -49,3 +49,14 @@
 ## Local environment compatibility correction
 - Restored the original Makefile default, `$(HOME)/.venvs/$(PROJECT)`, to preserve the existing local setup.
 - Updated README instructions to use `VENV=.venv` explicitly for the project-local environment used during development.
+
+## Follow-up: seat selection, simpler interface and stronger opponents
+- Added a human seat setting to the API and browser: first/red or second/yellow, with automatic computer openings and seat-aware turn, winner and color labels. Reset preserves the selected seat; friend mode hides the seat control.
+- Removed the hero, promotional taglines and footer; kept a plain title, game controls and a short rules hint.
+- Added tactical bitboard checks verified against brute-force move/reply enumeration in seeded games.
+- MCTS now uses forced-win/block checks, avoids enabling immediate losses, guides and bounds rollouts, and reuses searched subtrees in simulations. Default budget is 600 iterations.
+- The learner now has 14 features, zero-sum eligibility traces and tactical depth-6 search using learned leaf values. Original eight-feature model files still load.
+- Training cost estimate: 200-game pilot took 0.90 seconds; 12,000 games estimated at 54 seconds. The bounded CPU run completed in 41.52 seconds with seed 2027.
+- Development pilots (seed 61000, 10 games with paired four-ply openings): new MCTS/alpha-beta 6–3–1; new learner/alpha-beta 7–3–0; old learned weights with new search/alpha-beta 3–6–1. Final evaluation will use separate seeds (70000+).
+- Added a reproducible comparison script loading original controls from the fixed merged baseline revision. Historical initial results remain in place.
+- Browser smoke checks through desktop controls verified automatic openings, yellow moves and replies, reset, friend mode, and a narrow layout.

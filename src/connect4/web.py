@@ -24,8 +24,11 @@ def create_app():
         moves = data.get("moves", [])
         mode = data.get("mode", "human")
         difficulty = data.get("difficulty", "easy")
+        human_player = data.get("human_player", 0)
         if (
-            not isinstance(moves, list)
+            type(human_player) is not int
+            or human_player not in (0, 1)
+            or not isinstance(moves, list)
             or len(moves) > 42
             or mode not in ("human", "computer")
             or difficulty not in ("easy", "medium", "hard", "mcts", "learned")
@@ -38,7 +41,7 @@ def create_app():
         except ValueError as exc:
             return jsonify(error=str(exc)), 400
         moves = moves.copy()
-        if mode == "computer" and game.turn == 1 and not game.terminal:
+        if mode == "computer" and game.turn != human_player and not game.terminal:
             names = {
                 "easy": "random",
                 "medium": "minimax",
@@ -51,6 +54,8 @@ def create_app():
             moves.append(move)
         return jsonify(
             board=game.board(),
+            mode=mode,
+            human_player=human_player,
             moves=moves,
             turn=game.turn,
             winner=game.winner,

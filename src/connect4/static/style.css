@@ -17,76 +17,40 @@ main {
   padding: 28px 36px;
 }
 header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
   border-bottom: 1px solid #d9ded7;
-  padding-bottom: 24px;
-}
-.logo {
-  font:
-    700 36px "Space Grotesk",
-    sans-serif;
-  text-decoration: none;
-  color: inherit;
-  letter-spacing: -3px;
-}
-.logo span {
-  color: #e87558;
-  font-size: 22px;
-  margin-left: 5px;
-}
-.tag {
-  font-size: 13px;
-  color: #687570;
-}
-.intro {
-  padding: 48px 0 28px;
-  position: relative;
-}
-.eyebrow {
-  font-size: 10px;
-  letter-spacing: 2px;
-  font-weight: 700;
-  color: #5b756a;
+  padding-bottom: 22px;
+  margin-bottom: 24px;
 }
 h1 {
   font:
-    500 clamp(42px, 6vw, 68px) / 1.04 "Space Grotesk",
+    600 30px "Space Grotesk",
     sans-serif;
-  letter-spacing: -3px;
-  margin: 18px 0;
+  letter-spacing: -1px;
+  margin: 0;
 }
-h1 em {
-  font-style: normal;
-  color: #658b73;
+[hidden] {
+  display: none !important;
 }
-.intro > p:last-child {
-  position: absolute;
-  left: 52%;
-  top: 96px;
-  max-width: 270px;
-  color: #718078;
-  line-height: 1.7;
-  font-size: 15px;
+aside {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 .play-area {
   display: grid;
   grid-template-columns: 280px 1fr;
   gap: 52px;
-  border-top: 1px solid #d9ded7;
-  padding-top: 28px;
-}
-h2 {
-  font-size: 19px;
-  margin: 0 0 27px;
+  align-items: start;
 }
 label {
   display: block;
-  font-size: 10px;
-  letter-spacing: 1.5px;
-  font-weight: 700;
-  margin: 19px 0 9px;
+  font-size: 13px;
+  font-weight: 600;
 }
 select {
   width: 100%;
@@ -101,7 +65,7 @@ select {
 .players {
   display: grid;
   gap: 12px;
-  margin: 24px 0;
+  margin: 0;
   font-size: 12px;
 }
 .players span {
@@ -135,7 +99,7 @@ i {
   font-size: 11px;
   color: #79877e;
   line-height: 1.8;
-  margin-top: 20px;
+  margin: 0;
 }
 .game {
   max-width: 620px;
@@ -208,15 +172,6 @@ i {
   color: #aa3d30;
   min-height: 18px;
 }
-footer {
-  display: flex;
-  justify-content: space-between;
-  border-top: 1px solid #d9ded7;
-  margin-top: 30px;
-  padding-top: 20px;
-  font-size: 10px;
-  color: #829087;
-}
 button:focus-visible,
 select:focus-visible {
   outline: 3px solid #d99535;
@@ -226,17 +181,6 @@ select:focus-visible {
   main {
     padding: 20px;
   }
-  .tag {
-    font-size: 10px;
-  }
-  .intro {
-    padding: 25px 0;
-  }
-  .intro > p:last-child {
-    position: static;
-    font-size: 13px;
-    max-width: none;
-  }
   .play-area {
     grid-template-columns: 1fr;
     gap: 20px;
@@ -244,26 +188,25 @@ select:focus-visible {
   aside {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 8px 16px;
+    gap: 14px;
   }
-  aside h2,
-  aside .players,
-  aside .hint {
-    display: none;
-  }
-  aside label {
-    margin: 0;
-    grid-row: 1;
-  }
-  aside select {
-    grid-row: 2;
+  .field {
     min-width: 0;
   }
-  aside .reset {
+  select {
+    min-width: 0;
+  }
+  .players {
     grid-column: 1/-1;
-    width: auto;
-    justify-self: start;
-    padding: 8px 16px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  aside .reset {
+    align-self: end;
+  }
+  .hint {
+    grid-column: 1/-1;
   }
   .board {
     gap: 6px;
@@ -273,11 +216,5 @@ select:focus-visible {
   .columns {
     gap: 6px;
     padding: 0 12px;
-  }
-  footer span {
-    display: none;
-  }
-  h1 {
-    letter-spacing: -2px;
   }
 }
