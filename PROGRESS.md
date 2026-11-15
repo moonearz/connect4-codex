@@ -29,3 +29,19 @@
 - Added optional seeded paired opening positions to avoid repeating only two deterministic games. Added full move traces and source/model hashes to experimental records.
 - Recovered browser verification using desktop controls: verified computer reply, friend-mode turns, reset, and a ~500-pixel-wide responsive layout. Saved a preview screenshot outside the repository.
 - Added Python 3.13 GitHub Actions checks and aligned Makefile's default venv with the documented local environment.
+
+## Completed milestone
+- All four phases have a working baseline: engine, web application, traditional agents, and a learning opponent.
+- Final validation: Python 3.13.18, 45 passing tests, `ruff check .`, `ruff format --check .`, `node --check src/connect4/static/app.js`, and `git diff --check`.
+- Re-ran the complete evaluation sequentially using `python scripts/evaluate.py`; raw records and `experiments/RESULTS.md` include all comparisons.
+- Four-ply varied openings (40 games): alpha-beta/minimax 34–6; learned/minimax 8–32; learned/alpha-beta 3–37. This exposes variation hidden by deterministic empty-board repeats.
+- Engine throughput: 10,000 random-vs-random games in 1.11 seconds (~9,008 games/second). Reproduce with `RandomAgent(777)` and `RandomAgent(778)`, reused across 10,000 calls to `simulate`, timing the loop with `time.perf_counter()`.
+- Model training is bounded and CPU-only; no substantial compute spending or production deployment occurred.
+
+## Outstanding limitations and recommended next steps
+- Baseline learning model is intentionally small and weaker than search; use more training seeds and stronger held-out position sets before drawing general conclusions.
+- Search uses fixed depth/iteration limits; no transposition table or MCTS tree reuse yet.
+- Add learned-value lookahead, tactical MCTS rollouts and equal-time comparisons before considering a neural network.
+- Browser smoke checks were manual through desktop controls because the browser automation adapter failed to read requirements. No automated browser regression suite is included.
+- The UI currently assigns humans the first move; starting-seat selection is a useful follow-up.
+- No deployment was attempted. GitHub CI is configured; its remote result is independent of local validation.

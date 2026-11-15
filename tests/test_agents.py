@@ -57,3 +57,14 @@ def test_paired_random_openings_are_shared_and_reproducible():
     assert openings[0] != openings[2]
     with pytest.raises(ValueError):
         benchmark("random", "random", opening_plies=7)
+
+
+def test_benchmark_move_trace_replays_and_includes_opening():
+    result = benchmark("random", "random", 2, 12, opening_plies=4)
+    for record in result["records"]:
+        game = position(record["played_moves"])
+        assert game.terminal
+        winner = None if game.winner is None else record["seats"][game.winner]
+        assert winner == record["winner"]
+        assert record["moves"] == len(record["played_moves"])
+        assert record["moves"] == sum(record["decisions"]) + 4
