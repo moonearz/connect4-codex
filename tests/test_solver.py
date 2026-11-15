@@ -262,3 +262,20 @@ def test_draw_is_not_scored_as_a_loss():
         "random", [position], {0: oracle.analyze(position["moves"])}, oracle, games=2
     )
     assert result["summary"]["draws"] == 2
+
+
+def test_quiet_corpus_uses_tactics_not_solver_labels():
+    positions = generate_positions(8, 993, plies=(14, 15, 18, 19), quiet=True)
+    assert positions == generate_positions(8, 993, plies=(14, 15, 18, 19), quiet=True)
+    for position in positions:
+        game = replay(position["moves"])
+        children = [game.play(c) for c in game.legal_moves()]
+        assert not any(child.winner == game.turn for child in children)
+        safe = [
+            child
+            for child in children
+            if not any(
+                child.play(reply).winner == child.turn for reply in child.legal_moves()
+            )
+        ]
+        assert len(safe) >= 2

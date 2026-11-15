@@ -84,3 +84,10 @@
 - Defaults use 90 random surviving midgame/endgame positions (20/21/24/25/28/29 plies) and 20 continuations per agent, with alternating colors and shared openings. These do not measure empty-board opening strength.
 - Six-query pilot took 0.86 seconds total; the compiled solver uses an approximately 80 MiB transposition table. No book, GPU, training or paid service is involved.
 - Validation before evaluation: 97 tests passed, including ten real-solver endgames independently checked against full-width Python minimax. Normal CI skips only this optional integration check when the executable is absent.
+
+### First exact-reference results
+- All 90 initial positions solved and all 100 paired continuations completed without timeout.
+- Outcome preservation: random 63/90, minimax 87/90, alpha-beta 89/90, MCTS 90/90, learner 88/90. On the 50 informative positions: 46%, 94%, 98%, 100%, and 96% respectively.
+- Continuation W/D/L (20 per agent): random 3/0/17; minimax 9/0/11; alpha-beta 9/1/10; MCTS 10/0/10; learner 9/1/10. Every agent had ten theoretically winnable starts and ten losing starts; MCTS converted all ten wins in this sample.
+- This random late-game corpus is largely tactical and contains no drawn starts. Its high accuracy does not establish perfect play or opening strength.
+- Added an optional quiet-position filter (no immediate win and at least two moves safe against an immediate loss), using engine checks without solver scores. A second bounded evaluation will use 36 earlier positions at 14–19 plies, seed 92000, with a three-second exact-query timeout and 12 paired continuations per agent. Timeouts and incomplete games will remain explicit.

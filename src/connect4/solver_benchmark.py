@@ -23,7 +23,7 @@ DEFAULT_PLIES = (20, 21, 24, 25, 28, 29)
 NAMES = {-1: "loss", 0: "draw", 1: "win"}
 
 
-def generate_positions(count=90, seed=90000, plies=DEFAULT_PLIES):
+def generate_positions(count=90, seed=90000, plies=DEFAULT_PLIES, quiet=False):
     """Reject terminal random games; never select positions by solver outcome."""
     if (
         count < 1
@@ -47,6 +47,19 @@ def generate_positions(count=90, seed=90000, plies=DEFAULT_PLIES):
             game = game.play(move)
         if game.terminal or len(game.legal_moves()) < 2 or game.bits in seen:
             continue
+        if quiet:
+            children = [game.play(c) for c in game.legal_moves()]
+            if any(child.winner == game.turn for child in children):
+                continue
+            safe = sum(
+                not any(
+                    child.play(reply).winner == child.turn
+                    for reply in child.legal_moves()
+                )
+                for child in children
+            )
+            if safe < 2:
+                continue
         seen.add(game.bits)
         positions.append(
             dict(id=len(positions), moves=moves, ply=target, turn=game.turn)
@@ -253,6 +266,24 @@ def write_report(result, destination):
             f"{percent(d['informative_preservation_rate'])} | "
             f"{g['wins']}/{g['draws']}/{g['losses']} | {g['aborted']} |"
         )
+    solved = [p for p in result["positions"] if p.get("status") == "solved"]
+    distribution = dict(Counter(p["outcome"] for p in solved))
+    informative = next(iter(result["results"].values()))["move_quality"]["summary"][
+        "informative_positions"
+    ]
+    lines += [
+        "",
+        f"Seed: {result['seed']}; stages (plies): {result['plies']}.",
+        f"Coverage: {len(solved)}/{len(result['positions'])} positions solved; "
+        f"{informative} informative positions. Starting outcomes: {distribution}.",
+    ]
+    if result.get("quiet"):
+        lines += [
+            "",
+            "Quiet-position filter: no immediate win and at least two moves",
+            "that avoid an immediate opponent win. This uses local tactical",
+            "checks only, not solver scores or agent performance.",
+        ]
     lines += [
         "",
         "## Reading the results",
@@ -307,6 +338,11 @@ def main():
         help="Even continuations per agent; 0 disables.",
     )
     parser.add_argument("--seed", type=int, default=90000)
+    parser.add_argument(
+        "--quiet",
+        action="store_true",
+        help="Reject immediate wins and positions with fewer than two safe moves.",
+    )
     parser.add_argument("--output", type=Path, default=Path("experiments/solver"))
     args = parser.parse_args()
     if args.games < 0 or args.games % 2 or args.games // 2 > args.positions:
@@ -315,12 +351,15 @@ def main():
     solver.provenance()  # Fail early if the binary differs from its manifest.
     for name in args.agents:
         make_agent(name, args.seed)  # Validate names before doing expensive work.
-    positions = generate_positions(args.positions, args.seed, tuple(args.plies))
+    positions = generate_positions(
+        args.positions, args.seed, tuple(args.plies), args.quiet
+    )
     result = add_provenance(
         dict(
             agents=args.agents,
             seed=args.seed,
             plies=args.plies,
+            quiet=args.quiet,
             positions=positions,
             results={},
             status="running",
