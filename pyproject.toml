@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "connect4-codex"
 version = "0.1.0"
 requires-python = ">=3.13"
-dependencies = []
+dependencies = ["flask>=3.1,<4"]
 
 [project.optional-dependencies]
 dev = [
@@ -32,3 +32,6 @@ select = [
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"
+
+[tool.setuptools.package-data]
+connect4 = ["templates/*.html", "static/*"]
