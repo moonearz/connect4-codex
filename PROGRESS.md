@@ -45,3 +45,7 @@
 - Browser smoke checks were manual through desktop controls because the browser automation adapter failed to read requirements. No automated browser regression suite is included.
 - The UI currently assigns humans the first move; starting-seat selection is a useful follow-up.
 - No deployment was attempted. GitHub CI is configured; its remote result is independent of local validation.
+
+## Local environment compatibility correction
+- Restored the original Makefile default, `$(HOME)/.venvs/$(PROJECT)`, to preserve the existing local setup.
+- Updated README instructions to use `VENV=.venv` explicitly for the project-local environment used during development.

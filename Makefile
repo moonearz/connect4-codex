@@ -1,5 +1,5 @@
 PROJECT := $(notdir $(CURDIR))
-VENV ?= .venv
+VENV ?= $(HOME)/.venvs/$(PROJECT)
 
 PYTHON := $(VENV)/bin/python
 PIP := $(VENV)/bin/pip

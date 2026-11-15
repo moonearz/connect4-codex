@@ -31,8 +31,11 @@ ruff check .
 ruff format --check .
 ```
 
-`make test` uses `.venv` by default; override with `VENV=/path/to/venv`.
-`make setup` also installs the repository's pre-commit hooks via prek.
+Make targets use `$(HOME)/.venvs/$(PROJECT)` by default, preserving the existing
+local setup (`PROJECT` is the repository directory name). If you followed the
+`.venv` setup above, run `make VENV=.venv test` or `make VENV=.venv check`.
+`make setup` creates the default environment and also installs the repository's
+pre-commit hooks via prek; use `make VENV=.venv setup` to override its location.
 GitHub Actions runs pytest and Ruff on Python 3.13 for pushes and pull requests.
 
 ## Opponents
