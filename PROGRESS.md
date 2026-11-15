@@ -76,3 +76,28 @@
 - Use additional training seeds and larger paired opening sets, with equal-time budgets for fairer strength comparisons.
 - Explore learned spatial features or a small neural evaluator after estimating its compute cost; the current learner remains a compact linear value model combined with search.
 - Optimize tactical rollout overhead and consider persistent web-game agents only if tree reuse is worth introducing server-side game state.
+
+## Exact solver evaluation
+- Added an optional independent Pascal Pons reference executable from pinned revision `d6ba50d8aaf2308c769d9bf2abd42d90f34baf41`. The setup script verifies the archive SHA-256, compiles explicit upstream C++ files, retains its AGPL source/license in an ignored cache and records build provenance. No upstream source/binary or opening database is shipped with the application.
+- Added a bounded subprocess adapter with strict position/score/legality validation, caching, explicit no-book mode and timeout/error handling. This adapter is evaluation-only; gameplay and training are unchanged.
+- Added a seeded corpus generator, exact-score/outcome-preservation/blunder metrics, stage breakdowns and paired perfect-opposition continuations with expected-outcome and lost-points records. Unresolved positions and aborted games are reported rather than guessed or scored as losses.
+- Defaults use 90 random surviving midgame/endgame positions (20/21/24/25/28/29 plies) and 20 continuations per agent, with alternating colors and shared openings. These do not measure empty-board opening strength.
+- Six-query pilot took 0.86 seconds total; the compiled solver uses an approximately 80 MiB transposition table. No book, GPU, training or paid service is involved.
+- Validation before evaluation: 97 tests passed, including ten real-solver endgames independently checked against full-width Python minimax. Normal CI skips only this optional integration check when the executable is absent.
+
+### First exact-reference results
+- All 90 initial positions solved and all 100 paired continuations completed without timeout.
+- Outcome preservation: random 63/90, minimax 87/90, alpha-beta 89/90, MCTS 90/90, learner 88/90. On the 50 informative positions: 46%, 94%, 98%, 100%, and 96% respectively.
+- Continuation W/D/L (20 per agent): random 3/0/17; minimax 9/0/11; alpha-beta 9/1/10; MCTS 10/0/10; learner 9/1/10. Every agent had ten theoretically winnable starts and ten losing starts; MCTS converted all ten wins in this sample.
+- This random late-game corpus is largely tactical and contains no drawn starts. Its high accuracy does not establish perfect play or opening strength.
+- Added an optional quiet-position filter (no immediate win and at least two moves safe against an immediate loss), using engine checks without solver scores. A second bounded evaluation will use 36 earlier positions at 14–19 plies, seed 92000, with a three-second exact-query timeout and 12 paired continuations per agent. Timeouts and incomplete games will remain explicit.
+
+### Earlier quiet-position results and final validation
+- All 36 quiet positions at 14–19 plies solved and all 60 paired continuations completed without timeouts. Solver subprocess time was 14.51 seconds across 322 queries; the initial suite used 9.60 seconds across 223 queries.
+- On the 23 informative quiet positions, outcome-preserving decisions: random 8/23 (34.8%), minimax 17/23 (73.9%), alpha-beta 18/23 (78.3%), MCTS 20/23 (87.0%), learner 18/23 (78.3%). Overall preservation on all 36: 58.3%, 83.3%, 86.1%, 91.7%, 86.1%.
+- Quiet continuation W/D/L (12 per agent): random 0/0/12; minimax 2/1/9; alpha-beta 4/0/8; MCTS 5/0/7; learner 5/0/7. Each agent had five winning, two drawn and five losing starts under perfect play. MCTS and learner converted the five wins but both dropped the draws.
+- These are small midgame/endgame samples with different computational budgets, not Elo ratings, perfect agents or a full empty-board strength measurement. Earlier drawn positions expose failure modes hidden by the first late-game sample.
+- Replayed all 160 completed game traces and verified every recorded reference move maximized its exact scores and every actual outcome matched the terminal engine state.
+- Final local validation: 98 tests pass on Python 3.13.18, including ten actual solver endgames checked against exhaustive Python minimax; Ruff lint/format and diff checks pass. Normal CI skips only the optional real-solver check because external binaries are not distributed.
+- Evaluation results include held-out position labels, full decision/game traces, coverage, stage breakdowns, solver build hashes and unchanged agent/model configuration. Do not use these labels for training. If tuning to these errors, reserve a new held-out seed set.
+- No gameplay, learning, model, dependency or Makefile change was made in this follow-up. The external source/binary/license stay in ignored `.solver/`; no opening book, deployment, GPU or paid service was used.

@@ -31,3 +31,6 @@ htmlcov/
 *egg-info/
 build/
 dist/
+
+# Optional external evaluation solver source and executable
+.solver/
