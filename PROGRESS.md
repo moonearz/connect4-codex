@@ -76,3 +76,11 @@
 - Use additional training seeds and larger paired opening sets, with equal-time budgets for fairer strength comparisons.
 - Explore learned spatial features or a small neural evaluator after estimating its compute cost; the current learner remains a compact linear value model combined with search.
 - Optimize tactical rollout overhead and consider persistent web-game agents only if tree reuse is worth introducing server-side game state.
+
+## Exact solver evaluation
+- Added an optional independent Pascal Pons reference executable from pinned revision `d6ba50d8aaf2308c769d9bf2abd42d90f34baf41`. The setup script verifies the archive SHA-256, compiles explicit upstream C++ files, retains its AGPL source/license in an ignored cache and records build provenance. No upstream source/binary or opening database is shipped with the application.
+- Added a bounded subprocess adapter with strict position/score/legality validation, caching, explicit no-book mode and timeout/error handling. This adapter is evaluation-only; gameplay and training are unchanged.
+- Added a seeded corpus generator, exact-score/outcome-preservation/blunder metrics, stage breakdowns and paired perfect-opposition continuations with expected-outcome and lost-points records. Unresolved positions and aborted games are reported rather than guessed or scored as losses.
+- Defaults use 90 random surviving midgame/endgame positions (20/21/24/25/28/29 plies) and 20 continuations per agent, with alternating colors and shared openings. These do not measure empty-board opening strength.
+- Six-query pilot took 0.86 seconds total; the compiled solver uses an approximately 80 MiB transposition table. No book, GPU, training or paid service is involved.
+- Validation before evaluation: 97 tests passed, including ten real-solver endgames independently checked against full-width Python minimax. Normal CI skips only this optional integration check when the executable is absent.
