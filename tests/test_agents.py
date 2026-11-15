@@ -68,3 +68,60 @@ def test_benchmark_move_trace_replays_and_includes_opening():
         assert winner == record["winner"]
         assert record["moves"] == len(record["played_moves"])
         assert record["moves"] == sum(record["decisions"]) + 4
+
+
+@pytest.mark.parametrize("agent", [MCTSAgent(1), MCTSAgent(30)])
+def test_mcts_blocks_immediate_loss_even_at_small_budget(agent):
+    assert agent.choose(position([6, 0, 6, 1, 5, 2])) == 3
+
+
+def test_tactical_filter_matches_brute_force():
+    import random
+
+    from connect4.tactics import tactical_moves, winning_spots
+
+    rng = random.Random(134)
+    for _ in range(150):
+        game = Game()
+        while not game.terminal:
+            occupied = game.bits[0] | game.bits[1]
+            spots = winning_spots(game.bits[game.turn], occupied)
+            legal = game.legal_moves()
+            wins = {m for m in legal if game.play(m).winner == game.turn}
+            predicted = {m for m in legal if spots & (1 << (m * 7 + game.heights[m]))}
+            assert predicted == wins
+            safe = {
+                m
+                for m in legal
+                if not any(
+                    game.play(m).play(reply).winner == 1 - game.turn
+                    for reply in game.play(m).legal_moves()
+                )
+            }
+            expected = wins or safe or set(legal)
+            assert set(tactical_moves(game)) == expected
+            game = game.play(rng.choice(legal))
+
+
+@pytest.mark.parametrize(
+    "moves,winner", [([0, 1, 0, 1, 0, 1, 0], 0), ([0, 1, 0, 1, 2, 1, 2, 1], 1)]
+)
+def test_mcts_terminal_value_uses_current_player_perspective(moves, winner):
+    game = position(moves)
+    assert game.winner == winner
+    assert MCTSAgent(1)._rollout(game) == -1
+
+
+def test_mcts_reuses_the_actual_opponent_reply_subtree():
+    agent = MCTSAgent(80, seed=13)
+    game = Game()
+    move = agent.choose(game)
+    child = agent.root.children[move]
+    reply = next(iter(child.children))
+    expected_root = child.children[reply]
+    next_game = game.play(move).play(reply)
+    visits = expected_root.visits
+    chosen = agent.choose(next_game)
+    assert chosen in next_game.legal_moves()
+    assert agent.root is expected_root
+    assert agent.root.visits == visits + agent.iterations

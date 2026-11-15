@@ -5,6 +5,7 @@ import random
 from dataclasses import dataclass, field
 
 from connect4.engine import Game
+from connect4.tactics import tactical_moves
 
 ORDER = (3, 2, 4, 1, 5, 0, 6)
 WINDOWS = []
@@ -43,12 +44,17 @@ class RandomAgent:
 
 
 class MinimaxAgent:
-    def __init__(self, depth=3, pruning=False):
+    def __init__(self, depth=3, pruning=False, evaluator=evaluate, tactical=False):
         if depth < 1:
             raise ValueError("Depth must be positive.")
         self.depth = depth
         self.pruning = pruning
         self.nodes = 0
+        self.evaluator = evaluator
+        self.tactical = tactical
+
+    def moves(self, game):
+        return tactical_moves(game) if self.tactical else ordered(game)
 
     def value(self, game, depth, alpha, beta):
         self.nodes += 1
@@ -57,9 +63,9 @@ class MinimaxAgent:
         if game.terminal:
             return 0
         if depth == 0:
-            return evaluate(game)
+            return self.evaluator(game)
         best = -math.inf
-        for move in ordered(game):
+        for move in self.moves(game):
             score = -self.value(game.play(move), depth - 1, -beta, -alpha)
             best = max(best, score)
             if self.pruning:
@@ -70,7 +76,7 @@ class MinimaxAgent:
 
     def choose(self, game):
         self.nodes = 0
-        moves = ordered(game)
+        moves = self.moves(game)
         if not moves:
             raise ValueError("Cannot choose a move in a terminal game.")
         best, choice, alpha = -math.inf, moves[0], -math.inf
@@ -102,27 +108,61 @@ class Node:
 
 
 class MCTSAgent:
-    def __init__(self, iterations=300, seed=0):
-        if iterations < 1:
-            raise ValueError("Iterations must be positive.")
+    """UCT with tactical rollouts, bounded value estimates, and subtree reuse."""
+
+    def __init__(self, iterations=600, seed=0, rollout_limit=12):
+        if iterations < 1 or rollout_limit < 1:
+            raise ValueError("Iterations and rollout limit must be positive.")
         self.iterations = iterations
+        self.rollout_limit = rollout_limit
         self.rng = random.Random(seed)
+        self.root = None
+
+    def _reuse(self, game):
+        if self.root is not None:
+            if self.root.game == game:
+                return self.root
+            # Between this agent's turns, at most one opponent reply follows
+            # the move selected at the previous root.
+            for child in self.root.children.values():
+                if child.game == game:
+                    return child
+                for reply in child.children.values():
+                    if reply.game == game:
+                        return reply
+        return Node(game)
+
+    def _rollout(self, game):
+        start_player = game.turn
+        for _ in range(self.rollout_limit):
+            if game.terminal:
+                break
+            moves = tactical_moves(game)
+            # Prefer central columns while keeping stochastic exploration.
+            move = self.rng.choices(moves, weights=[4 - abs(3 - c) for c in moves])[0]
+            game = game.play(move)
+        if game.terminal:
+            return (
+                0.0
+                if game.winner is None
+                else (1.0 if game.winner == start_player else -1.0)
+            )
+        value = math.tanh(evaluate(game) / 100)
+        return value if game.turn == start_player else -value
 
     def choose(self, game):
-        moves = ordered(game)
+        moves = tactical_moves(game)
         if not moves:
             raise ValueError("Cannot choose a move in a terminal game.")
-        # Always take an immediate win, even with a small rollout budget.
-        for move in moves:
-            if game.play(move).winner == game.turn:
-                return move
-        root = Node(game)
+        if len(moves) == 1 or game.play(moves[0]).winner == game.turn:
+            return moves[0]
+        root = self._reuse(game)
+        self.root = root
         for _ in range(self.iterations):
             node, path = root, [root]
             while not node.game.terminal:
-                unexplored = [
-                    m for m in node.game.legal_moves() if m not in node.children
-                ]
+                candidates = tactical_moves(node.game)
+                unexplored = [m for m in candidates if m not in node.children]
                 if unexplored:
                     move = self.rng.choice(unexplored)
                     child = Node(node.game.play(move))
@@ -131,25 +171,22 @@ class MCTSAgent:
                     path.append(node)
                     break
                 node = max(
-                    node.children.values(),
+                    (node.children[m] for m in candidates),
                     key=lambda n: (
                         n.reward / n.visits
-                        + math.sqrt(2 * math.log(node.visits) / n.visits)
+                        + 0.7 * math.sqrt(math.log(node.visits) / n.visits)
                     ),
                 )
                 path.append(node)
-            rollout = node.game
-            while not rollout.terminal:
-                rollout = rollout.play(self.rng.choice(rollout.legal_moves()))
+            value = self._rollout(node.game)
             for ancestor in path:
                 ancestor.visits += 1
-                # Reward the player who moved into this node.
-                ancestor.reward += (
-                    0.5
-                    if rollout.winner is None
-                    else float(rollout.winner == 1 - ancestor.game.turn)
-                )
-        return max(root.children, key=lambda m: root.children[m].visits)
+                # Each node stores reward for the player who moved into it.
+                signed = value if ancestor.game.turn != node.game.turn else -value
+                ancestor.reward += (signed + 1) / 2
+        return max(
+            moves, key=lambda m: root.children[m].visits if m in root.children else 0
+        )
 
 
 def make_agent(name, seed=0):
@@ -157,7 +194,7 @@ def make_agent(name, seed=0):
         "random": lambda: RandomAgent(seed),
         "minimax": lambda: MinimaxAgent(3),
         "alphabeta": lambda: AlphaBetaAgent(5),
-        "mcts": lambda: MCTSAgent(300, seed),
+        "mcts": lambda: MCTSAgent(600, seed),
     }
     if name in ("learned", "untrained"):
         from connect4.learning import LearningAgent

@@ -1,4 +1,4 @@
-# Four — Connect Four simulator and AI
+# Connect Four simulator and AI
 
 A Python 3.13 Connect Four engine, responsive Flask application, four traditional
 opponents, and a small agent trained through self-play. No production deployment
@@ -15,9 +15,11 @@ flask --app connect4.web:create_app run --port 5000
 
 Open <http://127.0.0.1:5000>. Select computer or friend mode, choose a difficulty,
 and use the arrow above a column to drop a disc. Column controls work with Tab
-and Enter. Changing modes/difficulty or selecting **Start fresh** resets play.
-Humans play first against the computer. No accounts, database, or session secret
-are needed: the server reconstructs and validates each game from its move list.
+and Enter. Choose **First · Red** or **Second · Yellow** against the computer;
+when you choose second, the computer opens automatically. Changing settings or
+selecting **New game** resets play and keeps the chosen seat. No accounts,
+database, or session secret are needed: the server reconstructs and validates
+each game from its move list.
 The Flask development server is for local use.
 
 Python 3.13 can also be installed with `uv python install 3.13`. With uv available,
@@ -45,15 +47,24 @@ GitHub Actions runs pytest and Ruff on Python 3.13 for pushes and pull requests.
 | Easy | Seeded random legal moves | One sample |
 | Medium | Minimax with open-window heuristic | Depth 3 |
 | Hard | Alpha-beta with the same heuristic and center-first ordering | Depth 5 |
-| Explorer | UCT Monte Carlo Tree Search | 300 iterations/move |
-| Learner | Eight-feature tanh value function, trained by zero-sum TD(0) | One-ply value selection |
+| Monte Carlo | Tactical UCT with guided rollouts and value cutoffs | 600 iterations/move, 12-ply rollout limit |
+| Learning agent | 14-feature tanh value function, trained by zero-sum TD(lambda) | Tactical depth-6 search with learned leaf values |
 
 Web requests use fresh random seeds; experimental runs explicitly seed agents.
-The learner's checked-in weights come from 10,000 epsilon-greedy self-play games
-with seed 2026. Training took 18.62 seconds in the development environment. It uses
-no PyTorch/GPU, pretrained agents, solved-game database, or downloaded game data.
-It learns feature weights from rewards; the handcrafted feature definitions and
-exact evaluation of immediate terminal wins are shared with its untrained control.
+The learner's checked-in weights come from 12,000 epsilon-greedy self-play games
+with seed 2027. Training took 41.52 seconds on one CPU process, after a 200-game
+pilot estimated a 54-second budget. Training uses one-ply decisions; normal play
+uses deeper search with the trained value function. There is no PyTorch/GPU,
+pretrained agent, solved-game database, or downloaded game data.
+
+MCTS takes immediate wins, blocks forced threats, and avoids enabling immediate
+losses. Its rollouts use the same tactics and central-column preference, ending
+with a bounded heuristic estimate after 12 plies. Agents reused across simulated
+games can retain searched subtrees between moves. The stateless web API creates a
+fresh agent for each request, so browser games do not reuse trees across requests.
+
+Search budgets differ between opponents. The improvement report records time per
+move and controls for search depth, learned weights, and MCTS iteration count.
 
 ## Reproduce experiments
 
@@ -61,18 +72,21 @@ With the virtual environment active:
 
 ```bash
 # Bounded CPU self-play; overwrites the packaged learner model.
-python -m connect4.learning --games 10000 --seed 2026
+python -m connect4.learning --games 12000 --seed 2027
 
 # One paired matchup; game count must be positive and even.
 python -m connect4.benchmark --agents learned random --games 100 --seed 50000 \
-  --output experiments/learned-random.json
+  --output experiments/current/learned-random.json
 
 # Random opening positions shared within each pair, then seats swapped.
 python -m connect4.benchmark --agents alphabeta minimax --games 40 \
-  --seed 50000 --opening-plies 4 --output experiments/alphabeta-minimax-openings.json
+  --seed 50000 --opening-plies 4 --output experiments/current/alphabeta-minimax-openings.json
 
-# Full small evaluation suite, run sequentially; regenerates RESULTS.md.
+# Current general evaluation suite; writes experiments/current/RESULTS.md.
 python scripts/evaluate.py
+
+# Before/after comparison on held-out paired openings.
+python scripts/compare_improvements.py
 ```
 
 Agent names: `random`, `minimax`, `alphabeta`, `mcts`, `learned`, `untrained`.
@@ -80,13 +94,28 @@ JSON records include seeds, seats, outcomes, full move traces, draws, win rates,
 decision counts, timing, algorithm budgets, Python/platform, Git revision, and
 source/model SHA-256 hashes. Training JSON records weights and hyperparameters.
 Fixed seeds reproduce model weights and game traces; wall times naturally differ.
-The complete small suite takes roughly a minute on this development CPU.
+The suites take a few CPU minutes. `compare_improvements.py` loads the original
+agents and model from the fixed merged baseline commit in local Git history. A
+shallow clone needs the baseline history fetched before running that comparison.
+It compares old/new MCTS, old/new learning, the old model with new search, zero
+weights with new search, and the new model without search. By default all matches
+use the same held-out four-ply openings (seed 70000) with alternating seats.
 
-See [experimental results](experiments/RESULTS.md) for comparisons and limitations.
-The trained agent won 99/100 games against random versus 50/100 for its untrained
-control, and won 92/100 against that control directly. It remains weaker than the
-traditional search agents. Empty-board deterministic matchups repeat the same two
-games; paired random openings are included to broaden the comparison.
+See [agent improvement results](experiments/improvements/RESULTS.md) for the current
+comparison, including controls that separate training gains from search gains.
+The [fresh-tree web control](experiments/improvements/web/RESULTS.md) measures MCTS
+without reuse between turns. Reproduce it with:
+
+```bash
+python scripts/compare_improvements.py --match mcts_fresh alphabeta \
+  --output experiments/improvements/web
+```
+
+[Initial results](experiments/RESULTS.md) and their raw JSON files are
+historical snapshots of the original agents. New general-suite runs write into
+`experiments/current/` to preserve those snapshots. Empty-board deterministic
+matchups repeat the same two games; use paired random openings for position
+diversity.
 
 ## Engine API
 
@@ -119,6 +148,6 @@ column, or an invalid column raises `ValueError`.
 - `PROGRESS.md`: completed milestones, verification, and next steps.
 
 This is a working research baseline, not perfect or solved play. Next work should
-prioritize multiple training seeds, stronger position suites, learned evaluation
-inside search, and tactical MCTS rollouts. A neural model is deferred until its
+prioritize multiple training seeds, larger position suites, equal-time comparisons,
+and better learned value models. A neural model is deferred until its
 compute cost and experimental benefit are justified.

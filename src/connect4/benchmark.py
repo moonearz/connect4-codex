@@ -71,6 +71,38 @@ def benchmark(first, second, games=20, seed=0, factory=make_agent, opening_plies
     )
 
 
+def add_provenance(result):
+    """Annotate raw outcomes with source, model and computational budgets."""
+    try:
+        revision = subprocess.check_output(
+            ["git", "rev-parse", "HEAD"], text=True
+        ).strip()
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        revision = "unknown"
+    result["configuration"] = {
+        "minimax_depth": 3,
+        "alphabeta_depth": 5,
+        "mcts_iterations": 600,
+        "mcts_rollout_limit": 12,
+        "mcts_exploration": 0.7,
+        "learning_depth": 6,
+    }
+    source = Path(__file__).parent
+    result["source_sha256"] = {
+        p.name: hashlib.sha256(p.read_bytes()).hexdigest()
+        for p in sorted(source.glob("*.py"))
+    }
+    model = source / "data" / "learner.json"
+    if any("learn" in name for name in result["agents"]):
+        result["model_sha256"] = hashlib.sha256(model.read_bytes()).hexdigest()
+    result["environment"] = dict(
+        python=platform.python_version(),
+        platform=platform.platform(),
+        revision=revision,
+    )
+    return result
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--agents", nargs=2, default=["alphabeta", "random"])
@@ -81,32 +113,8 @@ def main():
         "--output", type=Path, default=Path("experiments/benchmark.json")
     )
     args = parser.parse_args()
-    try:
-        revision = subprocess.check_output(
-            ["git", "rev-parse", "HEAD"], text=True
-        ).strip()
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        revision = "unknown"
-    result = benchmark(
-        *args.agents, args.games, args.seed, opening_plies=args.opening_plies
-    )
-    result["configuration"] = {
-        "minimax_depth": 3,
-        "alphabeta_depth": 5,
-        "mcts_iterations": 300,
-    }
-    source = Path(__file__).parent
-    result["source_sha256"] = {
-        p.name: hashlib.sha256(p.read_bytes()).hexdigest()
-        for p in sorted(source.glob("*.py"))
-    }
-    model = source / "data" / "learner.json"
-    if "learned" in args.agents:
-        result["model_sha256"] = hashlib.sha256(model.read_bytes()).hexdigest()
-    result["environment"] = dict(
-        python=platform.python_version(),
-        platform=platform.platform(),
-        revision=revision,
+    result = add_provenance(
+        benchmark(*args.agents, args.games, args.seed, opening_plies=args.opening_plies)
     )
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(result, indent=2) + "\n")

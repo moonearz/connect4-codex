@@ -39,3 +39,30 @@ def test_invalid_model_and_budget():
         LearningAgent([float("nan")] * 8)
     with pytest.raises(ValueError):
         train(0)
+
+
+def test_learning_search_blocks_immediate_loss():
+    game = Game()
+    for move in [6, 0, 6, 1, 5, 2]:
+        game = game.play(move)
+    assert LearningAgent(depth=3).choose(game) == 3
+
+
+def test_legacy_model_loads_and_trace_signs_alternate(tmp_path):
+    import json
+
+    path = tmp_path / "legacy.json"
+    path.write_text(
+        json.dumps({"schema": 1, "algorithm": "linear-tanh-td0", "weights": [0.0] * 8})
+    )
+    legacy = LearningAgent.load(path, depth=1)
+    assert legacy.feature_version == 1
+    assert legacy.value(Game()) == 0
+    agent = LearningAgent(depth=1)
+    traces = [0.0] * 14
+    game = Game()
+    agent.update(game, game.play(3), traces=traces)
+    assert traces[7] == 1
+    game = game.play(3)
+    agent.update(game, game.play(2), traces=traces)
+    assert traces[7] == pytest.approx(0.3)

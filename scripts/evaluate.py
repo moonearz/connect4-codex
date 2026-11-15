@@ -1,5 +1,6 @@
 """Reproduce the small evaluation suite sequentially on one CPU process."""
 
+import argparse
 import json
 import subprocess
 import sys
@@ -26,6 +27,10 @@ MATCHES = [
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--output", type=Path, default=ROOT / "experiments/current")
+    args = parser.parse_args()
+    args.output.mkdir(parents=True, exist_ok=True)
     lines = [
         "# Experimental results",
         "",
@@ -39,7 +44,7 @@ def main():
     ]
     for first, second, games, seed, opening in MATCHES:
         name = f"{first}-{second}" + ("-openings" if opening else "") + ".json"
-        target = ROOT / "experiments" / name
+        target = args.output / name
         subprocess.run(
             [
                 sys.executable,
@@ -73,35 +78,20 @@ def main():
         "",
         "## Interpretation and limits",
         "",
-        "- The trained TD model wins 99/100 against random, compared with 50/100",
-        "  for the same architecture with zero weights. It wins 92/100 head-to-head",
-        "  against that untrained model, showing a benefit from experience.",
-        "- The learned model remains weaker than depth-limited search. Its eight",
-        "  aggregate features discard spatial relationships and tactical sequences.",
-        "- Empty-board deterministic search matchups repeat the same two games;",
-        "  their game counts do not represent independent samples. The additional",
-        "  paired-opening matches provide position diversity, but are still small.",
-        "- MCTS uses 300 uniform random rollouts per decision. This is a small",
-        "  budget with no rollout tactical policy or tree reuse.",
-        "- Both trained and untrained models value immediate terminal wins exactly;",
-        "  neither uses pretrained agents, solved databases or downloaded games.",
-        "- Depths and rollout counts are different computational budgets. This is",
-        "  a baseline comparison, not a matched-time algorithm ranking.",
-        "- Seeds 2026–2035 cover initial random-baseline matches; held-out",
-        "  evaluation uses seeds starting at 50000. Training uses seed 2026.",
-        "  Outcomes and move traces reproduce; timings and timing-based hashes vary.",
-        "",
-        "## Next experiments",
-        "",
-        "1. Run multiple training seeds and larger held-out opening suites.",
-        "2. Add shallow search over the learned value function and compare with",
-        "   equally budgeted handcrafted evaluation.",
-        "3. Add tactical rollout policies and tree reuse to MCTS.",
-        "4. Consider a small PyTorch value/policy network only after estimating",
-        "   CPU/GPU cost. It should retain held-out evaluations and an untrained",
-        "   control. No expensive neural training was run in this milestone.",
+        "- This report uses the current agents and packaged model. Configuration,",
+        "  source/model hashes and full move traces are recorded in each JSON file.",
+        "- Empty-board deterministic matchups repeat two games. Paired random",
+        "  openings provide diversity, but the two games in each pair are related.",
+        "- Depth and rollout budgets differ. Compare recorded timings as well as",
+        "  outcomes; these are not matched-time algorithm rankings.",
+        "- The learned and untrained agents share tactical depth-6 search, with",
+        "  trained versus zero feature weights. MCTS uses tactical guided rollouts.",
+        "- For frozen original-agent controls and isolated search/model changes,",
+        "  run scripts/compare_improvements.py and read its separate report.",
+        "- Seeds and moves reproduce. Timings vary by hardware. Future research",
+        "  should use multiple training seeds and larger held-out opening suites.",
     ]
-    (ROOT / "experiments" / "RESULTS.md").write_text("\n".join(lines) + "\n")
+    (args.output / "RESULTS.md").write_text("\n".join(lines) + "\n")
 
 
 if __name__ == "__main__":

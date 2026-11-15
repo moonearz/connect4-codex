@@ -49,3 +49,30 @@
 ## Local environment compatibility correction
 - Restored the original Makefile default, `$(HOME)/.venvs/$(PROJECT)`, to preserve the existing local setup.
 - Updated README instructions to use `VENV=.venv` explicitly for the project-local environment used during development.
+
+## Follow-up: seat selection, simpler interface and stronger opponents
+- Added a human seat setting to the API and browser: first/red or second/yellow, with automatic computer openings and seat-aware turn, winner and color labels. Reset preserves the selected seat; friend mode hides the seat control.
+- Removed the hero, promotional taglines and footer; kept a plain title, game controls and a short rules hint.
+- Added tactical bitboard checks verified against brute-force move/reply enumeration in seeded games.
+- MCTS now uses forced-win/block checks, avoids enabling immediate losses, guides and bounds rollouts, and reuses searched subtrees in simulations. Default budget is 600 iterations.
+- The learner now has 14 features, zero-sum eligibility traces and tactical depth-6 search using learned leaf values. Original eight-feature model files still load.
+- Training cost estimate: 200-game pilot took 0.90 seconds; 12,000 games estimated at 54 seconds. The bounded CPU run completed in 41.52 seconds with seed 2027.
+- Development pilots (seed 61000, 10 games with paired four-ply openings): new MCTS/alpha-beta 6–3–1; new learner/alpha-beta 7–3–0; old learned weights with new search/alpha-beta 3–6–1. Final evaluation will use separate seeds (70000+).
+- Added a reproducible comparison script loading original controls from the fixed merged baseline revision. Historical initial results remain in place.
+- Browser smoke checks through desktop controls verified automatic openings, yellow moves and replies, reset, friend mode, and a narrow layout.
+
+### Follow-up results and validation
+- Final paired evaluation uses seed 70000, 40 games per matchup, and the same four-ply opening positions for every control. Baseline source/model are loaded from merged revision `a70bc307e2e4e31ba5862e0be257b921b54e7e1f`.
+- Against unchanged depth-5 alpha-beta: original MCTS 9–30–1; new MCTS 23–16–1; new MCTS at 300 iterations 22–17–1; fresh-tree MCTS (web control) 23–17–0. W–L–D counts are for the tested agent.
+- Against alpha-beta: original learner 6–34–0; new learner 23–13–4; old learned weights with new depth-6 search 21–19–0; zero weights with new search 15–23–2.
+- New model without deeper search beat the old model 25–15–0. Full learned search lost to improved MCTS 13–26–1. Search accounts for much of the learner improvement; neither result proves general superiority from these small paired samples.
+- Mean simulated move times: new MCTS ~96 ms versus alpha-beta ~9 ms; new learner ~21 ms versus alpha-beta ~10 ms. The comparison records budgets and timing rather than claiming equal-time strength.
+- Added reproducible frozen-baseline, original-budget, zero-weight, old-model/new-search and fresh-tree controls. Reports/raw traces are in `experiments/improvements/`; historical results were preserved. General evaluation now writes to `experiments/current/` and no longer emits hardcoded initial performance claims.
+- Validation: 72 pytest tests pass on Python 3.13.18; Ruff lint/format, JavaScript syntax and diff whitespace checks pass. Wheel packaging verified tactical helpers, seat controls and the v2 trained model.
+- Browser checks verified second-seat opening/replies/reset, friend-mode control hiding, correct red/yellow labels, simplified desktop page and narrow layout.
+- The existing Makefile virtual environment default and project dependencies were preserved. No deployment, GPU training or paid services were used.
+
+### Recommended next experiments
+- Use additional training seeds and larger paired opening sets, with equal-time budgets for fairer strength comparisons.
+- Explore learned spatial features or a small neural evaluator after estimating its compute cost; the current learner remains a compact linear value model combined with search.
+- Optimize tactical rollout overhead and consider persistent web-game agents only if tree reuse is worth introducing server-side game state.
