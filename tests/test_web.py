@@ -47,3 +47,13 @@ def test_no_reply_after_human_wins(client):
     data = client.post("/api/game", json={"moves": moves, "mode": "computer"}).json
     assert data["winner"] == 0
     assert data["moves"] == moves
+
+
+@pytest.mark.parametrize("difficulty", ["easy", "medium", "hard", "mcts", "learned"])
+def test_each_difficulty_produces_valid_reply(client, difficulty):
+    response = client.post(
+        "/api/game", json={"moves": [3], "mode": "computer", "difficulty": difficulty}
+    )
+    assert response.status_code == 200
+    assert len(response.json["moves"]) == 2
+    assert response.json["turn"] == 0

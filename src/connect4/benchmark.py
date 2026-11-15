@@ -4,6 +4,7 @@ import argparse
 import hashlib
 import json
 import platform
+import random
 import subprocess
 import time
 from pathlib import Path
@@ -12,9 +13,11 @@ from connect4.agents import make_agent
 from connect4.engine import Game
 
 
-def benchmark(first, second, games=20, seed=0, factory=make_agent):
+def benchmark(first, second, games=20, seed=0, factory=make_agent, opening_plies=0):
     if games < 2 or games % 2:
         raise ValueError("Use a positive even game count for balanced starts.")
+    if not 0 <= opening_plies <= 6:
+        raise ValueError("Opening plies must be between zero and six.")
     records = []
     for index in range(games):
         # Each seed produces a pair with the same agent seeds and swapped seats.
@@ -22,19 +25,29 @@ def benchmark(first, second, games=20, seed=0, factory=make_agent):
         agents = [factory(first, pair_seed), factory(second, pair_seed)]
         seats = (0, 1) if index % 2 == 0 else (1, 0)
         game, times, counts = Game(), [0.0, 0.0], [0, 0]
+        opening = []
+        rng = random.Random(pair_seed)
+        for _ in range(opening_plies):
+            move = rng.choice(game.legal_moves())
+            opening.append(move)
+            game = game.play(move)
+        played = opening.copy()
         while not game.terminal:
             who = seats[game.turn]
             start = time.perf_counter()
             move = agents[who].choose(game)
             times[who] += time.perf_counter() - start
             counts[who] += 1
+            played.append(move)
             game = game.play(move)
         records.append(
             dict(
                 seed=pair_seed,
+                opening_moves=opening,
                 seats=seats,
                 winner=None if game.winner is None else seats[game.winner],
-                moves=sum(counts),
+                moves=len(played),
+                played_moves=played,
                 seconds=times,
                 decisions=counts,
             )
@@ -47,6 +60,7 @@ def benchmark(first, second, games=20, seed=0, factory=make_agent):
         agents=[first, second],
         games=games,
         seed=seed,
+        opening_plies=opening_plies,
         wins=wins,
         draws=draws,
         win_rates=[w / games for w in wins],
@@ -62,6 +76,7 @@ def main():
     parser.add_argument("--agents", nargs=2, default=["alphabeta", "random"])
     parser.add_argument("--games", type=int, default=20)
     parser.add_argument("--seed", type=int, default=2026)
+    parser.add_argument("--opening-plies", type=int, default=0)
     parser.add_argument(
         "--output", type=Path, default=Path("experiments/benchmark.json")
     )
@@ -72,7 +87,9 @@ def main():
         ).strip()
     except (subprocess.CalledProcessError, FileNotFoundError):
         revision = "unknown"
-    result = benchmark(*args.agents, args.games, args.seed)
+    result = benchmark(
+        *args.agents, args.games, args.seed, opening_plies=args.opening_plies
+    )
     result["configuration"] = {
         "minimax_depth": 3,
         "alphabeta_depth": 5,

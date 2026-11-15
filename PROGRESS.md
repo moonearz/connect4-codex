@@ -21,3 +21,11 @@
 - Pilot: 100 games in 0.31 CPU-wall seconds, estimating ~31 seconds for 10,000 games. Bounded run completed 10,000 games in 18.62 seconds (156,933 decisions).
 - Learning tests verify reward direction, changed weights, exact seeded reproduction, feature reflection symmetry and model round trips. Validation: 37 tests passed; Ruff passed.
 - Browser preview tooling returned `Browser Use could not read requirements` before navigating. Visual browser verification remains outstanding; API integration tests pass.
+
+## Evaluation and verification
+- Held-out seed 50,000: learned/random 99–1; untrained/random 50–50; learned/untrained 92–8 (100 games each).
+- Learned/minimax 0–40; learned/alpha-beta 0–40; learned/MCTS 12–28. Learning improves over zero weights, but this model does not match search.
+- Alpha-beta/MCTS 31–8 with one draw; MCTS/minimax 13–24 with three draws (40 games each).
+- Added optional seeded paired opening positions to avoid repeating only two deterministic games. Added full move traces and source/model hashes to experimental records.
+- Recovered browser verification using desktop controls: verified computer reply, friend-mode turns, reset, and a ~500-pixel-wide responsive layout. Saved a preview screenshot outside the repository.
+- Added Python 3.13 GitHub Actions checks and aligned Makefile's default venv with the documented local environment.

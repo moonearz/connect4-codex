@@ -1,5 +1,7 @@
 """Stateless web API: replay moves to validate every submitted position."""
 
+from secrets import randbits
+
 from flask import Flask, jsonify, render_template, request
 
 from connect4.agents import make_agent
@@ -44,7 +46,7 @@ def create_app():
                 "mcts": "mcts",
                 "learned": "learned",
             }
-            move = make_agent(names[difficulty]).choose(game)
+            move = make_agent(names[difficulty], seed=randbits(64)).choose(game)
             game = game.play(move)
             moves.append(move)
         return jsonify(

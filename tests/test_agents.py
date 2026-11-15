@@ -47,3 +47,13 @@ def test_simulation_and_benchmark():
     ]
     with pytest.raises(ValueError):
         benchmark("random", "random", 3)
+
+
+def test_paired_random_openings_are_shared_and_reproducible():
+    result = benchmark("random", "random", 4, 56, opening_plies=4)
+    openings = [r["opening_moves"] for r in result["records"]]
+    assert openings[0] == openings[1]
+    assert openings[2] == openings[3]
+    assert openings[0] != openings[2]
+    with pytest.raises(ValueError):
+        benchmark("random", "random", opening_plies=7)
