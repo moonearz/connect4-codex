@@ -1,0 +1,631 @@
+{
+  "agents": [
+    "mcts",
+    "random"
+  ],
+  "games": 20,
+  "seed": 2026,
+  "opening_plies": 0,
+  "wins": [
+    20,
+    0
+  ],
+  "draws": 0,
+  "win_rates": [
+    1.0,
+    0.0
+  ],
+  "draw_rate": 0.0,
+  "seconds": [
+    1.6978837649996876,
+    0.00023903900000732392
+  ],
+  "mean_move_seconds": [
+    0.017503956340202964,
+    2.7475747127278613e-06
+  ],
+  "records": [
+    {
+      "seed": 2026,
+      "opening_moves": [],
+      "seats": [
+        0,
+        1
+      ],
+      "winner": 0,
+      "moves": 9,
+      "played_moves": [
+        3,
+        0,
+        4,
+        2,
+        2,
+        4,
+        6,
+        4,
+        5
+      ],
+      "seconds": [
+        0.09191080100004001,
+        1.0330000009162177e-05
+      ],
+      "decisions": [
+        5,
+        4
+      ]
+    },
+    {
+      "seed": 2026,
+      "opening_moves": [],
+      "seats": [
+        1,
+        0
+      ],
+      "winner": 0,
+      "moves": 12,
+      "played_moves": [
+        0,
+        3,
+        2,
+        6,
+        4,
+        4,
+        4,
+        3,
+        5,
+        2,
+        6,
+        5
+      ],
+      "seconds": [
+        0.11547998800006098,
+        1.1165999922013725e-05
+      ],
+      "decisions": [
+        6,
+        6
+      ]
+    },
+    {
+      "seed": 2027,
+      "opening_moves": [],
+      "seats": [
+        0,
+        1
+      ],
+      "winner": 0,
+      "moves": 13,
+      "played_moves": [
+        1,
+        0,
+        4,
+        3,
+        3,
+        0,
+        0,
+        0,
+        4,
+        5,
+        4,
+        2,
+        4
+      ],
+      "seconds": [
+        0.13151906700011295,
+        1.2892000086139888e-05
+      ],
+      "decisions": [
+        7,
+        6
+      ]
+    },
+    {
+      "seed": 2027,
+      "opening_moves": [],
+      "seats": [
+        1,
+        0
+      ],
+      "winner": 0,
+      "moves": 8,
+      "played_moves": [
+        0,
+        3,
+        3,
+        4,
+        0,
+        2,
+        0,
+        1
+      ],
+      "seconds": [
+        0.06251823700017667,
+        8.569999977225962e-06
+      ],
+      "decisions": [
+        4,
+        4
+      ]
+    },
+    {
+      "seed": 2028,
+      "opening_moves": [],
+      "seats": [
+        0,
+        1
+      ],
+      "winner": 0,
+      "moves": 7,
+      "played_moves": [
+        3,
+        2,
+        3,
+        6,
+        3,
+        1,
+        3
+      ],
+      "seconds": [
+        0.06587544199976492,
+        6.614999961129797e-06
+      ],
+      "decisions": [
+        4,
+        3
+      ]
+    },
+    {
+      "seed": 2028,
+      "opening_moves": [],
+      "seats": [
+        1,
+        0
+      ],
+      "winner": 0,
+      "moves": 12,
+      "played_moves": [
+        2,
+        3,
+        6,
+        6,
+        1,
+        2,
+        5,
+        3,
+        0,
+        1,
+        2,
+        0
+      ],
+      "seconds": [
+        0.11052421500016862,
+        1.1906999930033635e-05
+      ],
+      "decisions": [
+        6,
+        6
+      ]
+    },
+    {
+      "seed": 2029,
+      "opening_moves": [],
+      "seats": [
+        0,
+        1
+      ],
+      "winner": 0,
+      "moves": 7,
+      "played_moves": [
+        3,
+        5,
+        2,
+        3,
+        1,
+        3,
+        4
+      ],
+      "seconds": [
+        0.06345617399983894,
+        6.49799994789646e-06
+      ],
+      "decisions": [
+        4,
+        3
+      ]
+    },
+    {
+      "seed": 2029,
+      "opening_moves": [],
+      "seats": [
+        1,
+        0
+      ],
+      "winner": 0,
+      "moves": 8,
+      "played_moves": [
+        5,
+        3,
+        3,
+        1,
+        3,
+        2,
+        1,
+        4
+      ],
+      "seconds": [
+        0.06623616399997445,
+        5.6449999988217314e-05
+      ],
+      "decisions": [
+        4,
+        4
+      ]
+    },
+    {
+      "seed": 2030,
+      "opening_moves": [],
+      "seats": [
+        0,
+        1
+      ],
+      "winner": 0,
+      "moves": 7,
+      "played_moves": [
+        2,
+        2,
+        3,
+        3,
+        4,
+        2,
+        1
+      ],
+      "seconds": [
+        0.06355174899999838,
+        6.375999987540126e-06
+      ],
+      "decisions": [
+        4,
+        3
+      ]
+    },
+    {
+      "seed": 2030,
+      "opening_moves": [],
+      "seats": [
+        1,
+        0
+      ],
+      "winner": 0,
+      "moves": 16,
+      "played_moves": [
+        2,
+        3,
+        3,
+        3,
+        2,
+        2,
+        4,
+        4,
+        0,
+        0,
+        3,
+        4,
+        5,
+        5,
+        3,
+        5
+      ],
+      "seconds": [
+        0.13925987900006476,
+        1.5694000239818706e-05
+      ],
+      "decisions": [
+        8,
+        8
+      ]
+    },
+    {
+      "seed": 2031,
+      "opening_moves": [],
+      "seats": [
+        0,
+        1
+      ],
+      "winner": 0,
+      "moves": 7,
+      "played_moves": [
+        4,
+        5,
+        4,
+        1,
+        4,
+        2,
+        4
+      ],
+      "seconds": [
+        0.07576229300002524,
+        9.506000083092658e-06
+      ],
+      "decisions": [
+        4,
+        3
+      ]
+    },
+    {
+      "seed": 2031,
+      "opening_moves": [],
+      "seats": [
+        1,
+        0
+      ],
+      "winner": 0,
+      "moves": 16,
+      "played_moves": [
+        5,
+        2,
+        1,
+        1,
+        2,
+        2,
+        2,
+        1,
+        6,
+        6,
+        2,
+        4,
+        6,
+        1,
+        3,
+        3
+      ],
+      "seconds": [
+        0.1484719259999565,
+        1.6713999912099098e-05
+      ],
+      "decisions": [
+        8,
+        8
+      ]
+    },
+    {
+      "seed": 2032,
+      "opening_moves": [],
+      "seats": [
+        0,
+        1
+      ],
+      "winner": 0,
+      "moves": 7,
+      "played_moves": [
+        3,
+        6,
+        2,
+        0,
+        4,
+        4,
+        1
+      ],
+      "seconds": [
+        0.06124179199991886,
+        7.077999953253311e-06
+      ],
+      "decisions": [
+        4,
+        3
+      ]
+    },
+    {
+      "seed": 2032,
+      "opening_moves": [],
+      "seats": [
+        1,
+        0
+      ],
+      "winner": 0,
+      "moves": 8,
+      "played_moves": [
+        6,
+        3,
+        0,
+        4,
+        4,
+        2,
+        5,
+        1
+      ],
+      "seconds": [
+        0.07135997199998201,
+        8.652000019537809e-06
+      ],
+      "decisions": [
+        4,
+        4
+      ]
+    },
+    {
+      "seed": 2033,
+      "opening_moves": [],
+      "seats": [
+        0,
+        1
+      ],
+      "winner": 0,
+      "moves": 7,
+      "played_moves": [
+        3,
+        3,
+        4,
+        1,
+        5,
+        0,
+        2
+      ],
+      "seconds": [
+        0.06991912699982095,
+        7.311000103982224e-06
+      ],
+      "decisions": [
+        4,
+        3
+      ]
+    },
+    {
+      "seed": 2033,
+      "opening_moves": [],
+      "seats": [
+        1,
+        0
+      ],
+      "winner": 0,
+      "moves": 10,
+      "played_moves": [
+        3,
+        3,
+        1,
+        2,
+        0,
+        2,
+        3,
+        0,
+        4,
+        1
+      ],
+      "seconds": [
+        0.08626889999993637,
+        1.1417999871810025e-05
+      ],
+      "decisions": [
+        5,
+        5
+      ]
+    },
+    {
+      "seed": 2034,
+      "opening_moves": [],
+      "seats": [
+        0,
+        1
+      ],
+      "winner": 0,
+      "moves": 7,
+      "played_moves": [
+        4,
+        0,
+        2,
+        2,
+        3,
+        2,
+        1
+      ],
+      "seconds": [
+        0.07106775299985202,
+        7.801999913681357e-06
+      ],
+      "decisions": [
+        4,
+        3
+      ]
+    },
+    {
+      "seed": 2034,
+      "opening_moves": [],
+      "seats": [
+        1,
+        0
+      ],
+      "winner": 0,
+      "moves": 8,
+      "played_moves": [
+        0,
+        3,
+        2,
+        3,
+        2,
+        3,
+        4,
+        3
+      ],
+      "seconds": [
+        0.06702735300007134,
+        8.200000024771725e-06
+      ],
+      "decisions": [
+        4,
+        4
+      ]
+    },
+    {
+      "seed": 2035,
+      "opening_moves": [],
+      "seats": [
+        0,
+        1
+      ],
+      "winner": 0,
+      "moves": 7,
+      "played_moves": [
+        3,
+        6,
+        3,
+        2,
+        3,
+        6,
+        3
+      ],
+      "seconds": [
+        0.07002057499994407,
+        6.893999966450792e-06
+      ],
+      "decisions": [
+        4,
+        3
+      ]
+    },
+    {
+      "seed": 2035,
+      "opening_moves": [],
+      "seats": [
+        1,
+        0
+      ],
+      "winner": 0,
+      "moves": 8,
+      "played_moves": [
+        6,
+        3,
+        2,
+        3,
+        6,
+        3,
+        1,
+        3
+      ],
+      "seconds": [
+        0.06641235799997958,
+        8.966000109467132e-06
+      ],
+      "decisions": [
+        4,
+        4
+      ]
+    }
+  ],
+  "configuration": {
+    "minimax_depth": 3,
+    "alphabeta_depth": 5,
+    "mcts_iterations": 300
+  },
+  "source_sha256": {
+    "__init__.py": "1248a35ef1f3e9c5f26a04cec071805eafad4ab96ab20ac8aea089997a71eeff",
+    "agents.py": "7490b195ec79bf6bbc1bb22b560802188d4d83ff38aec473f87a38cf20483853",
+    "benchmark.py": "a44bda2f459dca02f9165c96cd254e0a3b1081cb28706c002873951db109d7a4",
+    "engine.py": "fb64fcaa86cca38488271f3a227b964771d7f46721d960bf9a35724184ecf9b7",
+    "learning.py": "8af950982276a2d56417c95e12f38979ace31d725b31ec508dde4c5bbe75995b",
+    "web.py": "0089e5e671483f8712dec3013e3c771aa20bad6b598a763f6f30b7586d70713e"
+  },
+  "environment": {
+    "python": "3.13.18",
+    "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+    "revision": "e10027ab444f28797962f959a66d3421a3b2d706"
+  }
+}
