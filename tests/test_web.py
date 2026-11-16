@@ -99,3 +99,38 @@ def test_no_computer_reply_after_second_player_wins(client):
     ).json
     assert data["moves"] == moves
     assert data["winner"] == 1
+
+
+def test_health_check(client):
+    assert client.get("/healthz").json == {"status": "ok"}
+
+
+def test_untrusted_prefix_is_ignored_by_default(monkeypatch):
+    monkeypatch.delenv("CONNECT4_BEHIND_PROXY", raising=False)
+    client = create_app().test_client()
+    page = client.get("/", headers={"X-Forwarded-Prefix": "/other"}).text
+    assert 'data-game-url="/api/game"' in page
+    assert "/other/" not in page
+
+
+def test_proxy_prefix_covers_static_and_game_urls(monkeypatch):
+    monkeypatch.setenv("CONNECT4_BEHIND_PROXY", "1")
+    client = create_app().test_client()
+    headers = {"X-Forwarded-Prefix": "/connect4"}
+    page = client.get("/", headers=headers).text
+    assert 'data-game-url="/connect4/api/game"' in page
+    assert 'href="/connect4/static/style.css"' in page
+    assert 'src="/connect4/static/app.js"' in page
+    response = client.post(
+        "/api/game",
+        headers=headers,
+        json={"mode": "computer", "human_player": 1, "difficulty": "learned"},
+    )
+    assert response.status_code == 200
+    assert len(response.json["moves"]) == 1
+    assert response.json["turn"] == 1
+
+
+def test_proxy_mode_still_supports_direct_root_access(monkeypatch):
+    monkeypatch.setenv("CONNECT4_BEHIND_PROXY", "1")
+    assert 'data-game-url="/api/game"' in create_app().test_client().get("/").text

@@ -61,16 +61,19 @@ async function update(next, reset = false) {
   $("status").textContent =
     $("mode").value === "computer" ? "Computer is thinking…" : "Loading…";
   try {
-    const response = await fetch("/api/game", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        moves: next,
-        mode: $("mode").value,
-        difficulty: $("difficulty").value,
-        human_player: Number($("seat").value),
-      }),
-    });
+    const response = await fetch(
+      document.querySelector("main").dataset.gameUrl,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          moves: next,
+          mode: $("mode").value,
+          difficulty: $("difficulty").value,
+          human_player: Number($("seat").value),
+        }),
+      },
+    );
     const data = await response.json();
     if (token !== generation) return;
     if (!response.ok) throw new Error(data.error || "Unable to update game.");

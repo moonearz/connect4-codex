@@ -1,0 +1,20 @@
+.git
+.venv
+venv
+.solver
+.pytest_cache
+.ruff_cache
+__pycache__
+*.pyc
+*.egg-info
+build
+dist
+experiments
+tests
+docs
+.env
+.env.*
+
+# Local deployment configuration and rendered output
+/deploy/private/
+/deploy/generated/

@@ -9,6 +9,7 @@ requires-python = ">=3.13"
 dependencies = ["flask>=3.1,<4"]
 
 [project.optional-dependencies]
+server = ["gunicorn>=27,<28"]
 dev = [
     "pytest",
     "ruff==0.16.3",
