@@ -25,6 +25,21 @@ The Flask development server is for local use.
 Python 3.13 can also be installed with `uv python install 3.13`. With uv available,
 `uv venv --python 3.13` and `uv pip install -e '.[dev]'` provide the same setup.
 
+## Deployment templates
+
+The public repository provides a Docker image, an optional Gunicorn `server`
+extra, a deployment script and generic project-homepage/Caddy templates. The
+existing development Makefile default is unchanged.
+
+Keep actual domains, backend host-port assignments, filesystem paths and service
+configuration in a private infrastructure repository or server-only files.
+`deploy.sh` requires an explicit `HOST_PORT`; the Caddy renderer requires all
+three backend ports and the web-root path. No production values are supplied.
+
+See [deployment template usage](docs/DEPLOYMENT.md) for the interface and an
+example configuration. The scripts do not install proxy configuration, change a
+live homepage or provision a server automatically.
+
 ## Checks
 
 ```bash

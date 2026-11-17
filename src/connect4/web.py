@@ -1,8 +1,10 @@
 """Stateless web API: replay moves to validate every submitted position."""
 
+import os
 from secrets import randbits
 
 from flask import Flask, jsonify, render_template, request
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 from connect4.agents import make_agent
 from connect4.engine import Game
@@ -11,6 +13,14 @@ from connect4.engine import Game
 def create_app():
     app = Flask(__name__)
     app.config["MAX_CONTENT_LENGTH"] = 4096
+    if os.environ.get("CONNECT4_BEHIND_PROXY") == "1":
+        app.wsgi_app = ProxyFix(
+            app.wsgi_app, x_for=0, x_proto=1, x_host=0, x_port=0, x_prefix=1
+        )
+
+    @app.get("/healthz")
+    def health():
+        return jsonify(status="ok")
 
     @app.get("/")
     def index():

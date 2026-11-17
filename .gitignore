@@ -34,3 +34,7 @@ dist/
 
 # Optional external evaluation solver source and executable
 .solver/
+
+# Local deployment configuration and rendered output
+/deploy/private/
+/deploy/generated/
