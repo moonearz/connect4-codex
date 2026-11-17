@@ -95,4 +95,4 @@ if (( old_saved )); then
     docker rm "$backup" >/dev/null || echo "Old backup retained as $backup." >&2
 fi
 echo "Connect Four is running on 127.0.0.1:$HOST_PORT (container port 8000)."
-echo "Install the prepared Caddy routes separately to expose /connect4/."
+echo "Configure the reverse proxy separately in your infrastructure repository."

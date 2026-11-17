@@ -102,11 +102,9 @@
 - Evaluation results include held-out position labels, full decision/game traces, coverage, stage breakdowns, solver build hashes and unchanged agent/model configuration. Do not use these labels for training. If tuning to these errors, reserve a new held-out seed set.
 - No gameplay, learning, model, dependency or Makefile change was made in this follow-up. The external source/binary/license stay in ignored `.solver/`; no opening book, deployment, GPU or paid service was used.
 
-## Generic deployment templates
-- Added optional Docker/Gunicorn packaging, non-root execution and a health endpoint. Existing development Makefile defaults remain unchanged.
-- Added explicit host-port configuration, candidate-image checks and best-effort rollback in the deployment script.
-- Added an unbranded project-index example, generic Caddy routes and a renderer requiring all backend ports and the web-root path as inputs.
-- Added opt-in proxy-prefix handling and generated API URLs, preserving direct local development behavior.
-- Kept actual domains, host-port assignments, server paths and infrastructure inventory out of the public templates and deployment notes. Actual configuration belongs in a private infrastructure repository or server-only files.
-- Added ignore rules for local private/generated deployment files in both Git and Docker build contexts. The scripts do not deploy automatically or modify the proxy configuration.
-- Validation: 114 tests pass, with explicit-input and quoted-root-path coverage; lint/format and shell syntax checks pass. Generic rendered routes validate with Caddy. No production changes were made.
+## Application deployment
+- Added optional Docker/Gunicorn packaging, non-root execution, a health endpoint and opt-in proxy-prefix support. Existing development Makefile defaults remain unchanged.
+- The app deployment script requires an explicit host port, checks the candidate image and supports best-effort rollback for this application only.
+- Site-wide content and tooling belong in a separate infrastructure repository. Removed the project homepage, multi-application proxy template/renderer, multi-app checker and site environment example from this repository.
+- Public deployment documentation describes only this application's packaging and integration interface. It contains no server inventory or production configuration.
+- Preserved the deployment input guard test; all 103 remaining application/game/deployment tests pass. Lint/format, shell syntax and whitespace checks pass. No production changes were made.

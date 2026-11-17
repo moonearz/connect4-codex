@@ -1,150 +1,71 @@
-# Deployment template usage
+# Deploying the Connect Four application
 
-This public repository contains application packaging and reusable templates.
-It does not contain a production server inventory or a ready-to-install site
-configuration. No script provisions a server, installs proxy configuration or
-changes a live homepage automatically.
+This repository owns the application image and its app-specific deployment
+script. Site homepages, proxy configuration, service inventories and the deployment
+of other applications belong in a separate infrastructure repository. Actual
+server values and credentials must not be committed here.
 
-## Keep actual infrastructure configuration private
+## Container interface
 
-Use a private infrastructure repository for actual domains, host-port assignments,
-web-root paths, proxy/service definitions, image versions and deployment notes.
-Keep credentials and private keys outside Git, in server-only files or a secret
-manager. A private repository is not a substitute for secret management.
+- Python 3.13 with the optional Gunicorn `server` dependency.
+- Non-root execution, two workers, and internal HTTP port 8000.
+- `GET /healthz` returns `{"status":"ok"}` when the application is available.
+- The trained model, templates and static assets are packaged in the image.
+- No database or persistent application volume is required. Game state is
+  reconstructed from the move history submitted by the browser.
+- Local environments, experimental datasets and the optional external solver
+  are excluded from the build context.
 
-A possible **example** layout for the private repository is:
+Build manually with `docker build -t connect4:latest .`, or use the deployment
+script. Neither method configures a proxy or installs a site homepage.
 
-```text
-infrastructure/
-  README.md              # Your server inventory and recovery instructions
-  proxy/                 # Your actual site configuration
-  services/              # Your service definitions and image versions
-  environments/          # Non-secret deployment parameters
-```
+## App-specific deployment script
 
-The application's public Dockerfile and scripts can remain here. The private
-repository supplies the inputs and decides when to deploy. Adding these templates
-does not require migrating working services or changing their networking.
-
-For local drafting, `deploy/private/` and `deploy/generated/` are excluded from
-Git and the Docker build context. Store actual configuration there or outside
-this checkout; do not commit it into public docs, progress logs, PR descriptions
-or test fixtures. Ignore rules do not remove files already tracked or published.
-
-## Inputs
-
-`deploy/deployment.env.example` documents the interface. Its port/path fields are
-intentionally blank. Fill a private copy from your own inspected configuration:
-
-| Input | Purpose |
-|---|---|
-| `HOST_PORT` | Chosen loopback host port for Connect Four; required by deploy.sh |
-| `WORDLE_PORT` | Confirmed host port for the companion service |
-| `TICTACTOE_PORT` | Confirmed host port for the companion service |
-| `WEB_ROOT` | Absolute path to the intended project-index directory |
-| `SITE_URL` | Public site root used by the post-deployment checker |
-
-The container's port is 8000, a generic application interface rather than a
-production host-port assignment. The deployment script requires Bash, Git, Docker
-and curl. The rendering/checking helpers use standard-library Python 3.
-
-## Use the application deployment script
-
-After reviewing and filling a private environment file, export its parameters in
-your deployment shell. For example, with a private local copy:
+The script requires Bash, Git, Docker and curl. Export `HOST_PORT` from your
+private deployment configuration outside this checkout, then run:
 
 ```bash
-set -a
-. ./deploy/private/deployment.env
-set +a
 ./deploy.sh
 ```
 
-Only source a file you control. The script does not load environment files by
-itself. It refuses to run without `HOST_PORT` and validates the supplied port.
-Optional overrides are `CONTAINER_NAME` (default `connect4`), `IMAGE` (default
-`connect4:latest`) and `SKIP_PULL=1` for an explicitly chosen local checkout.
+There is no host-port default. The script validates the explicit input, requires
+a clean tracked working tree, and pulls with `--ff-only`. It builds the image,
+checks a temporary container and learned-agent opening, then replaces the named
+Connect Four container. It publishes only to loopback, polls health and attempts
+to restore the old container if replacement fails. A conflicting port is an error;
+no unrelated service is stopped and no alternative port is selected automatically.
 
-The script requires a clean tracked working tree and pulls with `--ff-only`.
-It builds the image, checks a temporary container and learned-agent opening, then
-replaces the named container. It polls health and attempts to restore the previous
-container if replacement fails. Docker rejects occupied ports; the script does
-not stop an unrelated occupant or silently choose another port. Replacement has
-a short interruption, and rollback is best effort. Keep your own recovery plan
-and configuration backup in the private infrastructure repository.
+Replacement briefly interrupts this application. Rollback is best effort; keep
+recovery procedures and the chosen image/version in the private infrastructure
+workflow. The script does not migrate or deploy any other application.
 
-The image uses Python 3.13, the optional Gunicorn `server` extra, a non-root user,
-two workers and a health check. It excludes local environments, experiments and
-the optional external solver. Local development and the Makefile defaults are
-unchanged. This template assumes a host-based proxy reaching loopback-published
-containers; adapt the private configuration if your proxy uses another network.
+Optional overrides:
 
-## Render an example proxy fragment
+| Variable | Default | Purpose |
+|---|---|---|
+| `CONTAINER_NAME` | `connect4` | This application's container name |
+| `IMAGE` | `connect4:latest` | Local image tag to build and run |
+| `SKIP_PULL` | `0` | Set to `1` for an explicitly chosen local checkout |
 
-With parameters exported from your private configuration:
+After deployment, check the selected endpoint:
 
 ```bash
-mkdir -p deploy/generated
-python3 scripts/render_caddy.py \
-  --tictactoe-port "$TICTACTOE_PORT" \
-  --wordle-port "$WORDLE_PORT" \
-  --connect4-port "$HOST_PORT" \
-  --web-root "$WEB_ROOT" \
-  --output deploy/generated/projects.routes
+curl --fail "http://127.0.0.1:$HOST_PORT/healthz"
+docker logs --tail 50 connect4
 ```
 
-Every port and the web root must be explicit. The renderer rejects invalid or
-duplicate ports and requires an absolute literal root path. Rendered output is
-local/private and ignored; it is not automatically installed.
+Use your chosen container name if overridden. Development and its Makefile
+virtual-environment default remain unchanged.
 
-The fragment is an **example** for a project index with `/tictactoe/`, `/wordle/`
-and `/connect4/`. In a private site configuration, placement might look like:
+## Reverse-proxy integration contract
 
-```caddyfile
-example.com {
-    import /path/to/private/projects.routes
-}
-```
+The private infrastructure configuration controls the domain, network topology,
+public path, TLS and routing. When mounting this application at a path prefix,
+the trusted proxy must strip that prefix before forwarding requests and overwrite
+`X-Forwarded-Prefix` with the public prefix. Forward the original protocol in
+`X-Forwarded-Proto` as well. Enable `CONNECT4_BEHIND_PROXY=1` only behind that trusted
+proxy. The deployment script enables it for the loopback-published container.
 
-`example.com` and `/path/to/private/projects.routes` are placeholders. Retain your
-actual site/TLS/other settings privately. Do not replace a working server config
-with this example or add a duplicate site block. Back up the active configuration,
-test the replacement separately, validate the complete candidate configuration,
-and use your existing reload mechanism only when those checks pass.
-
-The fragment strips prefixes for Wordle and Connect Four and supplies an explicit
-forwarded-prefix header. Enable `CONNECT4_BEHIND_PROXY=1` only behind a trusted
-proxy overwriting these headers; the deployment script sets it for the
-loopback-published app. Direct local development ignores forwarded prefixes.
-
-The example tic-tac-toe application already owns `/tictactoe/<id>` and its move
-and reset endpoints. The template preserves those paths, rewrites only the launch
-path, and relaunches expired games. Adjust the private routing if your companion
-applications expose different interfaces.
-
-## Project-index example and verification
-
-`deploy/homepage/index.html` is an unbranded static example with inline CSS and
-three relative project links. Copy/customize it in the private infrastructure
-workflow and install it into the chosen web root yourself. It has no build step.
-Adding another project requires a link plus an appropriate private proxy route.
-
-After you perform a deployment, verify the site using its private `SITE_URL`:
-
-```bash
-python3 scripts/check_site.py --base-url "$SITE_URL"
-```
-
-The checker makes normal test requests for homepage links, canonical slashes,
-static assets, both Connect Four seats/all opponents, the companion Wordle API,
-and tic-tac-toe launch/move/reset/expired-game behavior. It changes no configuration.
-Use it against a separate staging setup before switching live routing. It assumes
-the companion apps follow the interfaces represented by the example fragment.
-
-## Public history
-
-Replacing a public file or PR description does not erase previously published
-versions. Git objects, PR events or edit history, caches, forks and copies can
-remain accessible. These templates contain no server credentials. If credentials
-are ever exposed, rotate them and follow the hosting provider's removal process;
-simply deleting the text is insufficient.
+Flask generates the prefixed static and API URLs. Direct local development
+ignores forwarded prefixes by default. Test asset loading, API replies, both
+starting seats and reset through the proxy as part of your infrastructure checks.
